@@ -19,20 +19,20 @@ const RATE: f32 = 1e-1;
 fn main() {
     //let mut rng: StdRng = rand::rngs::StdRng::seed_from_u64(SEED);
     let mut rng: StdRng = StdRng::from_os_rng();
-    let x = array![[0., 1.]];
+    let a0 = array![[0., 1.]];
     let w1 = Array::random_using((2, 2), Uniform::<f32>::new(0., 1.).unwrap(), &mut rng);
     let b1 = Array::random_using((1, 2), Uniform::<f32>::new(0., 1.).unwrap(), &mut rng);
 
     let w2 = Array::random_using((2, 1), Uniform::<f32>::new(0., 1.).unwrap(), &mut rng);
     let b2 = Array::random_using((1, 1), Uniform::<f32>::new(0., 1.).unwrap(), &mut rng);
 
-    dbg!(&x);
+    dbg!(&a0);
     dbg!(&w1);
     dbg!(&b1);
     dbg!(&w2);
     dbg!(&b2);
 
-    let mut a1 = x.dot(&w1);
+    let mut a1 = a0.dot(&w1);
     a1 = a1 + b1;
     a1 = a1.mapv_into(sigmoidf);
 
