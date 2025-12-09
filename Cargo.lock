@@ -3980,6 +3980,7 @@ dependencies = [
  "ndarray 0.17.1",
  "ndarray-rand",
  "nshare",
+ "num-traits",
 ]
 
 [[package]]

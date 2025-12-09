@@ -1,5 +1,4 @@
 use ndarray_rand::rand::prelude::*;
-use rust_ml::nn::sigmoidf;
 
 #[rustfmt::skip]
 const TRAIN: [(f32, f32);5] = [

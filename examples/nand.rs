@@ -1,5 +1,5 @@
 use ndarray_rand::rand::prelude::*;
-use rust_ml::nn::sigmoidf;
+use rust_ml::Sigmoid;
 
 #[rustfmt::skip]
 const TRAIN: [(f32, f32, f32);4] = [
@@ -16,7 +16,7 @@ fn cost(train: &[(f32, f32, f32)], w1: f32, w2: f32, b: f32) -> f32 {
         .iter()
         .map(|(x1, x2, y)| (x1 * w1, x2 * w2, y))
         .fold(0., |acc, (x1, x2, y)| {
-            acc + (sigmoidf(x1 + x2 + b) - y).powi(2)
+            acc + ((x1 + x2 + b) - y).sigmoid().powi(2)
         })
         / train.len() as f32
 }
@@ -54,6 +54,6 @@ fn main() {
     println!("loss: {}", cost(&TRAIN, w1, w2, b));
 
     TRAIN.iter().for_each(|(x1, x2, _)| {
-        println!("{} | {} = {}", x1, x2, sigmoidf(x1 * w1 + x2 * w2 + b));
+        println!("{} | {} = {}", x1, x2, (x1 * w1 + x2 * w2 + b).sigmoid());
     });
 }
