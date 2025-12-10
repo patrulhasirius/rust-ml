@@ -1,4 +1,6 @@
-use ndarray::{Array, ArrayView1, Axis, Dim};
+use std::ops::AddAssign;
+
+use ndarray::{Array, ArrayView1, Axis, Dim, ScalarOperand};
 use ndarray_rand::{
     RandomExt,
     rand::rngs::StdRng,
@@ -29,7 +31,7 @@ pub struct NN<T: Float + SampleUniform> {
     bs: Vec<NormalArray<T>>,
     acs: Vec<NormalArray<T>>,
 }
-impl<T: Float + SampleUniform + 'static> NN<T> {
+impl<T: Float + SampleUniform + AddAssign + ScalarOperand + 'static> NN<T> {
     pub fn new_random(shape: Vec<usize>, rng: &mut StdRng, low: T, high: T) -> Self {
         assert!(!shape.is_empty(), "empty shape");
         let count = shape.len() - 1;
@@ -80,10 +82,80 @@ impl<T: Float + SampleUniform + 'static> NN<T> {
             self.acs[i + 1] = z.mapv(Sigmoid::sigmoid);
         }
     }
-    fn cost(self, ti: &NormalArray<T>, to: &NormalArray<T>) -> T {
-        todo!()
+    pub fn cost(&mut self, ti: &NormalArray<T>, to: &NormalArray<T>) -> T {
+        let mut c = T::zero();
+        for i in 0..ti.nrows() {
+            let x = ti.row(i);
+            let y = to.row(i);
+            self.input(&x);
+            self.foward();
+            let d = self.output().clone() - y.insert_axis(Axis(0));
+            c += d.pow2().sum()
+        }
+        c / T::from(ti.nrows()).unwrap()
     }
+    //fn finite_diff(&self, eps: T, ti: &NormalArray<T>, to: &NormalArray<T>) -> Self {
+    //    let mut saved: T;
+    //    let mut m = self.clone();
+    //    let mut g = self.clone();
+    //    let cost = m.cost(ti, to);
+    //    for i in 0..self.count {
+    //        for ((row, col), weight) in m.ws[i].indexed_iter_mut() {
+    //            saved = weight.clone();
+    //            *weight += eps;
+    //            let d = (m.cost(ti, to) - cost) / eps;
+    //            *g.ws[i].get_mut((row, col)).unwrap() = d;
+    //            *weight = saved;
+    //        }
+    //    }
+    //    todo!()
+    //}
     fn finite_diff(&self, eps: T, ti: &NormalArray<T>, to: &NormalArray<T>) -> Self {
-        todo!()
+        let mut m = self.clone();
+        let mut g = self.clone();
+        
+        let cost = m.cost(ti, to);
+
+        for i in 0..self.count {
+            let (rows, cols) = m.ws[i].dim();
+            
+            for r in 0..rows {
+                for c in 0..cols {
+                    let saved = m.ws[i][[r, c]];
+                    m.ws[i][[r, c]] += eps;
+                    let new_cost = m.cost(ti, to);
+                    let d = (new_cost - cost) / eps;
+                    g.ws[i][[r, c]] = d;
+                    m.ws[i][[r, c]] = saved;
+                }
+            }
+        }
+
+        for i in 0..self.count {
+            let (rows, cols) = m.bs[i].dim();
+            
+            for r in 0..rows {
+                for c in 0..cols {
+                    let saved = m.bs[i][[r, c]];
+                    m.bs[i][[r, c]] += eps;
+                    let new_cost = m.cost(ti, to);
+                    let d = (new_cost - cost) / eps;
+                    g.bs[i][[r, c]] = d;
+                    m.bs[i][[r, c]] = saved;
+                }
+            }
+        }
+
+        g 
+    }
+    pub fn learn(&mut self, rate: T, eps: T, ti: &NormalArray<T>, to: &NormalArray<T>) {
+        let mut g = self.finite_diff(eps, ti, to);
+        g.ws.iter_mut().for_each(|x| {*x = x.mapv(|x| x * rate);});
+        g.bs.iter_mut().for_each(|x| {*x = x.mapv(|x| x * rate);});
+        for i in 0..self.count {
+            self.ws[i] = self.ws[i].clone() - &g.ws[i];
+            self.bs[i] = self.bs[i].clone() - &g.bs[i];
+        };
+
     }
 }
