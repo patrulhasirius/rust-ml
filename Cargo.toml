@@ -13,7 +13,7 @@ opt-level = 3
 
 
 [dependencies]
-bevy = { version = "0.17.3", features = ["dynamic_linking"] }
+bevy = { version = "0.18", default-features = false, features = ["2d", "dev"] }
 derive_more = { version = "2.0.1", features = ["add", "mul"] }
 ndarray = { version = "0.17.1", features = ["matrixmultiply-threading"] }
 ndarray-rand = "0.16.0"
