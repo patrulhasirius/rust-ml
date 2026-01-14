@@ -8,6 +8,7 @@ codegen-backend = "cranelift"
 codegen-backend = "llvm"
 
 [target.x86_64-unknown-linux-gnu]
+linker = "clang"
 rustflags = [
   # (Nightly) Make the current crate share its generic instantiations
   "-Ctarget-cpu=native",
