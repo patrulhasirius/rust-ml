@@ -18,7 +18,7 @@ const OR: [[f32; 3];4] = [
     [1., 0., 1.],
     [0., 1., 1.],
     [1., 1., 1.],
-    ];
+];
 const SEED: u64 = 69;
 const EPS: f32 = 1e-1;
 const RATE: f32 = 1e-1;

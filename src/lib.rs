@@ -78,8 +78,10 @@ impl<T: Float + SampleUniform + AddAssign + ScalarOperand + 'static> NN<T> {
     }
     pub fn foward(&mut self) {
         for i in 0..self.count {
-            let z = self.acs[i].dot(&self.ws[i]) + &self.bs[i];
-            self.acs[i + 1] = z.mapv(Sigmoid::sigmoid);
+            let mut z = self.acs[i].dot(&self.ws[i]);
+            z += &self.bs[i];
+            z.mapv_inplace(Sigmoid::sigmoid);
+            self.acs[i + 1] = z;
         }
     }
     pub fn cost(&mut self, ti: &NormalArray<T>, to: &NormalArray<T>) -> T {
@@ -89,8 +91,11 @@ impl<T: Float + SampleUniform + AddAssign + ScalarOperand + 'static> NN<T> {
             let y = to.row(i);
             self.input(&x);
             self.foward();
-            let d = self.output().clone() - y.insert_axis(Axis(0));
-            c += d.pow2().sum()
+            let output = self.output();
+            for (o, t) in output.iter().zip(y) {
+                let d = *o - *t;
+                c += d * d;
+            }
         }
         c / T::from(ti.nrows()).unwrap()
     }
@@ -133,12 +138,10 @@ impl<T: Float + SampleUniform + AddAssign + ScalarOperand + 'static> NN<T> {
         g 
     }
     pub fn learn(&mut self, rate: T, eps: T, ti: &NormalArray<T>, to: &NormalArray<T>) {
-        let mut g = self.finite_diff(eps, ti, to);
-        g.ws.iter_mut().for_each(|x| {*x = x.mapv(|x| x * rate);});
-        g.bs.iter_mut().for_each(|x| {*x = x.mapv(|x| x * rate);});
+        let g = self.finite_diff(eps, ti, to);
         for i in 0..self.count {
-            self.ws[i] = self.ws[i].clone() - &g.ws[i];
-            self.bs[i] = self.bs[i].clone() - &g.bs[i];
+            self.ws[i].scaled_add(-rate, &g.ws[i]);
+            self.bs[i].scaled_add(-rate, &g.bs[i]);
         };
 
     }
