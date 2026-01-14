@@ -23,7 +23,7 @@ impl<T: Float> Sigmoid for T {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NN<T: Float + SampleUniform> {
     count: usize,
     shape: Vec<usize>,
