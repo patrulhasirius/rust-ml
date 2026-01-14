@@ -17,7 +17,6 @@ bevy = { version = "0.17.3", features = ["dynamic_linking"] }
 derive_more = { version = "2.0.1", features = ["add", "mul"] }
 ndarray = { version = "0.17.1", features = ["matrixmultiply-threading"] }
 ndarray-rand = "0.16.0"
-nshare = "0.10.0"
 num-traits = "0.2.19"
 
 # Enable more optimization in the release profile at the cost of compile time.
